@@ -23,6 +23,7 @@ const rehypeSanitizeOptions = {
     ...defaultSchema.attributes,
     code: [...(defaultSchema.attributes?.code || []), ['className', 'language-mermaid', 'language-math']],
     span: [...(defaultSchema.attributes?.span || []), ['className', 'line-numbers-rows']],
+    input: [...(defaultSchema.attributes?.input || []), ['type', 'checked', 'disabled']],
   },
 };
 
