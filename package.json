@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "export": "next export",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "start-server": "node server.js",
+    "pkg": "pkg server.js --targets node16-win-x64"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.2.5",
