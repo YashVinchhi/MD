@@ -1,51 +1,51 @@
 'use server';
 
 import { generate } from '@genkit-ai/core';
-import { configureGenkit } from 'genkit';
+import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 import { ollama } from 'genkitx-ollama';
 
-type LlmTask = 'summarize' | 'predict' | 'tags' | 'mindmap';
+// Configure Genkit once
+const llmProvider = typeof window !== 'undefined' ? localStorage.getItem('llmProvider') : 'gemini';
+const apiKey = typeof window !== 'undefined' ? localStorage.getItem('apiKey') : process.env.GEMINI_API_KEY;
 
-async function getClient() {
-  const provider = typeof window !== 'undefined' ? localStorage.getItem('llmProvider') : 'gemini';
-  const apiKey = typeof window !== 'undefined' ? localStorage.getItem('apiKey') : process.env.GEMINI_API_KEY;
+let model: string;
 
-  switch (provider) {
+const plugins: any[] = [];
+switch (llmProvider) {
     case 'ollama':
-      configureGenkit({
-        plugins: [
-          ollama({
+        plugins.push(ollama({
             models: [{ name: 'gemma' }],
             serverAddress: 'http://127.0.0.1:11434',
-          }),
-        ],
-        logLevel: 'debug',
-        enableTracingAndMetrics: true,
-      });
-      return 'ollama/gemma';
+        }));
+        model = 'ollama/gemma';
+        break;
     case 'qwen':
-        configureGenkit({
-            plugins: [
-              ollama({
-                models: [{ name: 'qwen2:0.5b' }],
-                serverAddress: 'http://127.0.0.1:11434',
-              }),
-            ],
-            logLevel: 'debug',
-            enableTracingAndMetrics: true,
-          });
-          return 'ollama/qwen2:0.5b';
+        plugins.push(ollama({
+            models: [{ name: 'qwen2:0.5b' }],
+            serverAddress: 'http://127.0.0.1:11434',
+        }));
+        model = 'ollama/qwen2:0.5b';
+        break;
     case 'gemini':
     default:
-      configureGenkit({
-        plugins: [googleAI({ apiKey })],
-        logLevel: 'debug',
-        enableTracingAndMetrics: true,
-      });
-      return 'google/gemini-1.5-flash';
-  }
+        if (apiKey) {
+            plugins.push(googleAI({ apiKey }));
+        } else {
+            plugins.push(googleAI());
+        }
+        model = 'google/gemini-1.5-flash';
+        break;
 }
+
+genkit({
+    plugins,
+    logLevel: 'debug',
+    enableTracingAndMetrics: true,
+});
+
+
+type LlmTask = 'summarize' | 'predict' | 'tags' | 'mindmap';
 
 const prompts: Record<LlmTask, (content: string) => string> = {
     summarize: (content: string) => `Summarize the following text:\n\n${content}`,
@@ -66,7 +66,6 @@ const prompts: Record<LlmTask, (content: string) => string> = {
 };
 
 export async function llm(task: LlmTask, content: string): Promise<string> {
-  const model = await getClient();
   const prompt = prompts[task](content);
 
   const { text } = await generate({
