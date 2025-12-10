@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "tauri:build": "npx tauri build"
+    "tauri:build": "npx tauri build",
+    "tauri": "tauri"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.2.5",
@@ -66,7 +67,7 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.13",
-    "@tauri-apps/cli": "^1.5.14",
+    "@tauri-apps/cli": "^1.6.3",
     "@types/node": "^20",
     "@types/react": "^19.2.1",
     "@types/react-dom": "^19.2.1",
