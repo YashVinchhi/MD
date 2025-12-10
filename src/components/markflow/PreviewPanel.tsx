@@ -5,7 +5,6 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { Mermaid } from "./Mermaid";
-import { MermaidGenerator } from "./MermaidGenerator";
 import { forwardRef } from "react";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -35,10 +34,6 @@ export const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({ onP
                 return <Mermaid chart={codeContent} />;
               }
               
-              if (lang === "mermaid-gen") {
-                return <MermaidGenerator description={codeContent} />;
-              }
-
               return (
                 <code className={`${className || ''} font-code`} {...props}>
                   {children}
