@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import Link from 'next/link';
-import { summarize, llm } from "@/ai/llm";
+import { predict, summarize, generateTags, generateMindmap } from "@/ai/llm";
 import { MindMapModal } from "./MindMapModal";
 
 export function Header() {
@@ -39,7 +39,9 @@ export function Header() {
     setFilePath,
     isSaved,
     setSaved,
+    summaries,
     setSummary,
+    tags,
     setTags,
     setMindmap,
     isLoading,
@@ -47,6 +49,7 @@ export function Header() {
   } = useEditorStore();
   const [tauriApi, setTauriApi] = useState<any>(null);
   const [isMindMapOpen, setMindMapOpen] = useState(false);
+  const [recentFiles, setRecentFiles] = useState<string[]>([]);
 
   useEffect(() => {
     if (isTauri) {
@@ -56,9 +59,27 @@ export function Header() {
     }
   }, [isTauri]);
 
+  useEffect(() => {
+    async function fetchRecentFiles() {
+      // Dynamically list files in public/data and public/docs
+      const docsRes = await fetch("/docs");
+      const dataRes = await fetch("/data");
+      let docsFiles: string[] = [];
+      let dataFiles: string[] = [];
+      try {
+        docsFiles = await docsRes.json();
+      } catch {}
+      try {
+        dataFiles = await dataRes.json();
+      } catch {}
+      setRecentFiles([...dataFiles, ...docsFiles]);
+    }
+    fetchRecentFiles();
+  }, []);
+
   const handleNewFile = () => {
     setMarkdownText("");
-    setFilePath(null);
+    setFilePath("data/untitled.md"); // Default to data folder
     setSaved(true);
   };
 
@@ -113,7 +134,7 @@ export function Header() {
     try {
       const newPath = await tauriApi.dialog.save({
         filters: [{ name: "Markdown", extensions: ["md", "mdx"] }],
-        defaultPath: filePath || undefined,
+        defaultPath: "data/untitled.md",
       });
       if (newPath) {
         await tauriApi.fs.writeTextFile(newPath, markdownText);
@@ -136,13 +157,12 @@ export function Header() {
 
   const fetchSummary = async () => {
     setIsLoading('summary');
-    setSummary('');
     try {
       const summaryText = await summarize(markdownText);
-      setSummary(summaryText);
+      setSummary(filePath || "", summaryText);
       toast({
         title: "Summary Generated",
-        description: "The summary has been added to the preview.",
+        description: "The summary has been saved.",
       });
     } catch (error) {
       console.error('Error fetching summary:', error);
@@ -157,13 +177,12 @@ export function Header() {
   
   const fetchTags = async () => {
     setIsLoading('tags');
-    setTags([]);
     try {
-      const tagsText = await llm('tags', markdownText);
-      setTags(tagsText.split(',').map(tag => tag.trim()));
+      const tagsText = await generateTags(markdownText);
+      setTags(filePath || "", tagsText.split(',').map((tag: string) => tag.trim()));
       toast({
         title: "Tags Generated",
-        description: "Tags have been added to the preview.",
+        description: "Tags have been saved.",
       });
     } catch (error) {
       console.error('Error fetching tags:', error);
@@ -180,7 +199,7 @@ export function Header() {
     setIsLoading('mindmap');
     setMindmap('');
     try {
-      const mindmapText = await llm('mindmap', markdownText);
+      const mindmapText = await generateMindmap(markdownText);
       setMindmap(mindmapText);
       setMindMapOpen(true);
     } catch (error) {
@@ -192,6 +211,17 @@ export function Header() {
     } finally {
       setIsLoading(null);
     }
+  };
+
+  const handleOpenRecentFile = (file: string) => {
+    // Try to open from data folder first, then docs
+    fetch(`/data/${file}`)
+      .then((res) => res.ok ? res.text() : fetch(`/docs/${file}`).then((r) => r.text()))
+      .then((text) => {
+        setMarkdownText(text);
+        setFilePath(`data/${file}`);
+        setSaved(true);
+      });
   };
 
   const fileActions = [
@@ -320,6 +350,30 @@ export function Header() {
             </Tooltip>
           ))}
         </TooltipProvider>
+      </div>
+
+      <div className="mt-4 mb-4">
+        <h4 className="text-xs font-semibold mb-2">Recents</h4>
+        <ul className="space-y-1">
+          {recentFiles.map((file) => (
+            <li key={file}>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full text-left" onClick={() => handleOpenRecentFile(file)}>
+                      {file}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span className="text-xs text-muted-foreground">
+                      {summaries[file] ? summaries[file] : "No summary available."}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className="mt-auto flex flex-col gap-2 p-2">

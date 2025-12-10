@@ -7,10 +7,10 @@ interface EditorState {
   setFilePath: (path: string | null) => void;
   isSaved: boolean;
   setSaved: (saved: boolean) => void;
-  summary: string;
-  setSummary: (summary: string) => void;
-  tags: string[];
-  setTags: (tags: string[]) => void;
+  summaries: Record<string, string>; // summary per file
+  setSummary: (file: string, summary: string) => void;
+  tags: Record<string, string[]>; // tags per file
+  setTags: (file: string, tags: string[]) => void;
   mindmap: string;
   setMindmap: (mindmap: string) => void;
   isLoading: 'summary' | 'tags' | 'mindmap' | null;
@@ -50,15 +50,15 @@ Mars remains a planet of profound scientific interest. While challenging, its ex
 
 export const useEditorStore = create<EditorState>((set) => ({
   markdownText: sampleMarkdown,
-  setMarkdownText: (text) => set({ markdownText: text, isSaved: false, summary: '', tags: [], mindmap: '' }),
+  setMarkdownText: (text) => set({ markdownText: text }),
   filePath: null,
   setFilePath: (path) => set({ filePath: path }),
   isSaved: true,
   setSaved: (saved) => set({ isSaved: saved }),
-  summary: '',
-  setSummary: (summary) => set({ summary }),
-  tags: [],
-  setTags: (tags) => set({ tags }),
+  summaries: {},
+  setSummary: (file, summary) => set((state) => ({ summaries: { ...state.summaries, [file]: summary } })),
+  tags: {},
+  setTags: (file, tags) => set((state) => ({ tags: { ...state.tags, [file]: tags } })),
   mindmap: '',
   setMindmap: (mindmap) => set({ mindmap }),
   isLoading: null,

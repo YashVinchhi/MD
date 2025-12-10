@@ -8,6 +8,7 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { forwardRef, useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { predict } from "@/ai/llm";
+import { EditorView } from "codemirror";
 
 interface EditorPanelProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,17 +59,22 @@ export const EditorPanel = forwardRef<HTMLDivElement, EditorPanelProps>(({ onEdi
     return () => clearTimeout(handler);
   }, [content, setMarkdownText]);
 
+  useEffect(() => {
+    setContent(markdownText);
+  }, [markdownText]);
+
   return (
-    <div className="relative h-full overflow-auto font-code" ref={ref} onScroll={onEditorScroll}>
+    <div className="relative h-full overflow-auto font-code break-words max-w-3xl mx-auto w-full" ref={ref} onScroll={onEditorScroll}>
       <CodeMirror
         value={content}
         height="100%"
         theme={oneDark}
         extensions={[
           markdown({ base: markdownLanguage, codeLanguages: languages }),
+          EditorView.lineWrapping,
         ]}
         onChange={handleContentChange}
-        style={{ height: '100%' }}
+        style={{ height: '100%', width: '100%' }}
         basicSetup={{
           lineNumbers: true,
           foldGutter: true,

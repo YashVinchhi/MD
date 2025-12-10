@@ -38,73 +38,43 @@ interface ExtraProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({ onPreviewScroll }, ref) => {
-  const { markdownText, summary, tags } = useEditorStore();
+  const { markdownText } = useEditorStore();
 
   return (
-    <div className="h-full overflow-auto" ref={ref} onScroll={onPreviewScroll}>
-        <div className="p-6">
-            {summary && (
-                <Card className="mb-6">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                    <Sparkles className="h-5 w-5" />
-                    Summary
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground">{summary}</p>
-                </CardContent>
-                </Card>
-            )}
-
-            {tags.length > 0 && (
-                <Card className="mb-6">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                        <Tags className="h-5 w-5" />
-                        Tags
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-wrap gap-2">
-                        {tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary">{tag}</Badge>
-                        ))}
-                    </CardContent>
-                </Card>
-            )}
-
-            <article className="prose prose-invert max-w-none">
-                <ReactMarkdown
-                remarkPlugins={[remarkMath, remarkGfm]}
-                rehypePlugins={[
-                    rehypeKatex,
-                    rehypeHighlight,
-                    [rehypeSanitize, rehypeSanitizeOptions],
-                ]}
-                components={{
-                    code({ node, inline, className, children, ...props }: ExtraProps) {
-                    const match = /language-(\w+)/.exec(className || "");
-                    if (match && match[1] === "mermaid") {
-                        return (
-                        <Mermaid chart={String(children).replace(/\n$/, "")} />
-                        );
-                    }
-                    return !inline && match ? (
-                        <code className={`${className || ''} font-code`} {...props}>
-                        {children}
-                        </code>
-                    ) : (
-                        <code className={`${className || ''} font-code`} {...props}>
-                        {children}
-                        </code>
-                    );
-                    },
-                }}
-                >
-                {markdownText}
-                </ReactMarkdown>
-            </article>
-        </div>
+    <div className="h-full overflow-auto max-w-3xl mx-auto w-full" ref={ref} onScroll={onPreviewScroll}>
+      <div className="p-6">
+        <article className="prose prose-invert max-w-none break-words w-full">
+          <ReactMarkdown
+            remarkPlugins={[remarkMath, remarkGfm]}
+            rehypePlugins={[
+              rehypeKatex,
+              rehypeHighlight,
+              [rehypeSanitize, rehypeSanitizeOptions],
+            ]}
+            components={{
+              code({ node, inline, className, children, ...props }: ExtraProps) {
+                const match = /language-(\w+)/.exec(className || "");
+                if (match && match[1] === "mermaid") {
+                  return (
+                    <Mermaid chart={String(children).replace(/\n$/, "")} />
+                  );
+                }
+                return !inline && match ? (
+                  <code className={`${className || ''} font-code`} {...props}>
+                    {children}
+                  </code>
+                ) : (
+                  <code className={`${className || ''} font-code`} {...props}>
+                    {children}
+                  </code>
+                );
+              },
+            }}
+          >
+            {markdownText}
+          </ReactMarkdown>
+        </article>
+      </div>
     </div>
   );
 });
