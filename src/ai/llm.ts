@@ -76,3 +76,13 @@ export async function llm(task: LlmTask, content: string): Promise<string> {
 
   return text;
 }
+
+export async function summarize(content: string) {
+    'use server';
+    return await llm('summarize', content);
+}
+
+export async function predict(content: string) {
+    'use server';
+    return await llm('predict', content);
+}

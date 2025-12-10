@@ -14,6 +14,7 @@ import 'highlight.js/styles/github-dark.css';
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { summarize } from "@/ai/llm";
 
 interface PreviewPanelProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,15 +47,8 @@ export const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({ onP
     setIsLoading(true);
     setSummary('');
     try {
-      const response = await fetch('/api/summarize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: markdownText }),
-      });
-      const data = await response.json();
-      setSummary(data.summary);
+      const summaryText = await summarize(markdownText);
+      setSummary(summaryText);
     } catch (error) {
       console.error('Error fetching summary:', error);
     } finally {

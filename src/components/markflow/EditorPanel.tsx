@@ -7,6 +7,7 @@ import { languages } from "@codemirror/language-data";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { forwardRef, useEffect, useState } from "react";
 import { Button } from "../ui/button";
+import { predict } from "@/ai/llm";
 
 interface EditorPanelProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,16 +25,9 @@ export const EditorPanel = forwardRef<HTMLDivElement, EditorPanelProps>(({ onEdi
       return;
     }
     try {
-      const response = await fetch('/api/predict', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: currentContent }),
-      });
-      const data = await response.json();
-      if(data.prediction){
-        setSuggestion(data.prediction);
+      const prediction = await predict(currentContent);
+      if(prediction){
+        setSuggestion(prediction);
       }
     } catch (error) {
       console.error('Error fetching prediction:', error);
