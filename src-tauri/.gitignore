@@ -5,3 +5,4 @@
 /icons/
 dist/
 node_modules/
+!/src/main.rs
