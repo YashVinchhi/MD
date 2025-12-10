@@ -3,7 +3,7 @@
 import { generate } from '@genkit-ai/core';
 import { configureGenkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
-import { ollama } from 'genkitx/ollama';
+import { ollama } from 'genkitx-ollama';
 
 type LlmTask = 'summarize' | 'predict' | 'tags' | 'mindmap';
 
@@ -74,7 +74,7 @@ export async function llm(task: LlmTask, content: string): Promise<string> {
     prompt,
   });
 
-  return text;
+  return text();
 }
 
 export async function summarize(content: string) {
