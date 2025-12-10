@@ -1,6 +1,5 @@
 'use server';
 
-import { generate } from '@genkit-ai/core';
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 import { ollama } from 'genkitx-ollama';
@@ -38,7 +37,7 @@ switch (llmProvider) {
         break;
 }
 
-genkit({
+const ai = genkit({
     plugins,
     logLevel: 'debug',
     enableTracingAndMetrics: true,
@@ -68,12 +67,12 @@ const prompts: Record<LlmTask, (content: string) => string> = {
 export async function llm(task: LlmTask, content: string): Promise<string> {
   const prompt = prompts[task](content);
 
-  const { text } = await generate({
+  const { text } = await ai.generate({
     model,
     prompt,
   });
 
-  return text();
+  return text;
 }
 
 export async function summarize(content: string) {
