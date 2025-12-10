@@ -1,8 +1,6 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
-import Settings from '../components/Settings';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 export const metadata: Metadata = {
   title: 'MarkFlow',
@@ -23,15 +21,5 @@ export default function RootLayout({
         <Toaster />
       </body>
     </html>
-  );
-}
-
-function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/settings" element={<Settings />} />
-      </Routes>
-    </BrowserRouter>
   );
 }
