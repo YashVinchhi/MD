@@ -6,6 +6,7 @@ import {
   FolderOpen,
   Save,
   SaveAll,
+  Settings,
 } from "lucide-react";
 import { useEditorStore } from "@/store/editorStore";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import { AppLogo } from "./AppLogo";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { Link, BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Link from 'next/link';
 
 export function Header() {
   const isTauri = useIsTauri();
@@ -193,6 +194,34 @@ export function Header() {
       </div>
 
       <div className="mt-auto flex flex-col gap-2 p-2">
+        <TooltipProvider>
+           <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href="/settings">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-2 px-2"
+                    aria-label="Settings"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span className="truncate group-data-[collapsible=icon]:hidden">
+                      Settings
+                    </span>
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent
+                side="right"
+                align="center"
+                className="group-data-[collapsible=icon]:flex hidden"
+              >
+                <p>
+                  Settings
+                </p>
+              </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+
         <div className="flex items-center gap-2 rounded-md p-2 text-xs text-muted-foreground">
           <File className="h-4 w-4 flex-shrink-0" />
           <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">

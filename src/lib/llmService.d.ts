@@ -1,3 +1,1 @@
-declare module "@/lib/llmService" {
-  export function getPrediction(content: string): Promise<string>;
-}
+// This file is obsolete and will be removed.
