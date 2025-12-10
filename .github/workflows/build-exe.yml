@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Build EXE
+    name: Build Tauri Windows EXE
     runs-on: windows-latest
 
     steps:
@@ -30,14 +30,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Install Rust
+      - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
           override: true
 
-      - name: Cache Rust
+      - name: Cache Rust dependencies
         uses: actions/cache@v3
         with:
           path: |
@@ -47,18 +47,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Install Tauri dependencies
-        run: |
-          npm install
+      - name: Install Tauri and project dependencies
+        run: npm install
 
-      - name: Build Tauri EXE
+      - name: Build Tauri Windows EXE
         env:
           NEXT_DISABLE_STATIC_EXPORT: true
-        run: |
-          npm run tauri build
+        run: npm run tauri build
 
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-app
+          name: tauri-app-exe
           path: src-tauri/target/release/bundle/**/*.exe
