@@ -33,11 +33,11 @@ switch (llmProvider) {
         } else {
             plugins.push(googleAI());
         }
-        model = 'gemini-1.5-flash-latest';
+        model = 'google/gemini-1.5-flash-latest';
         break;
 }
 
-const ai = genkit({
+export const ai = genkit({
     plugins,
     logLevel: 'debug',
     enableTracingAndMetrics: true,
