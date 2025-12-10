@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
+
 function Calendar({
   className,
   classNames,
@@ -53,14 +54,7 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
-      components={{
-        IconLeft: ({ className, ...props }: { className?: string }) => (
-          <span className={className} {...props} />
-        ),
-        IconRight: ({ className, ...props }: { className?: string }) => (
-          <span className={className} {...props} />
-        ),
-      }}
+      // Removed unsupported 'components' prop
       {...props}
     />
   )

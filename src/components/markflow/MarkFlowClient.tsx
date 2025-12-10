@@ -39,7 +39,7 @@ export default function MarkFlowClient() {
 
   useEffect(() => {
     if (!tauriApi) return;
-    const unlisten = tauriApi.event.listen<string[]>(
+    const unlisten = tauriApi.event.listen(
       "tauri://file-drop",
       async (e: { payload: string[] }) => {
         const filePath = e.payload[0];
