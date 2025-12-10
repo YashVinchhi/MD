@@ -81,7 +81,7 @@ export async function summarize(content: string) {
     return await llm('summarize', content);
 }
 
-export async function predict(content: string) {
+export async function predict(content:string) {
     'use server';
     return await llm('predict', content);
 }
