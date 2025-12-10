@@ -50,9 +50,12 @@ jobs:
       - name: Install Tauri and project dependencies
         run: npm install
 
-      - name: Build Tauri Windows EXE
-        env:
-          NEXT_DISABLE_STATIC_EXPORT: true
+      - name: Build Next.js static export
+        run: |
+          npm run build
+          npm run export
+
+      - name: Build Tauri EXE
         run: npm run tauri build
 
       - name: Upload EXE artifact

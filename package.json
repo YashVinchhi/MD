@@ -5,10 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "tauri:build": "npx tauri build",
+    "export": "next export",
     "tauri": "tauri"
   },
   "dependencies": {
