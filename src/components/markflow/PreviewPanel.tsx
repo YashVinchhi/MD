@@ -4,17 +4,15 @@ import { useEditorStore } from "@/store/editorStore";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
-import { forwardRef, useState } from "react";
+import { forwardRef } from "react";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import { Mermaid } from "./Mermaid";
 import "katex/dist/katex.min.css";
 import 'highlight.js/styles/github-dark.css';
-import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles, Tags, BrainCircuit } from "lucide-react";
+import { Sparkles, Tags } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { summarize, llm } from "@/ai/llm";
 import { Badge } from "@/components/ui/badge";
 
 interface PreviewPanelProps {
@@ -40,82 +38,11 @@ interface ExtraProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({ onPreviewScroll }, ref) => {
-  const { markdownText } = useEditorStore();
-  const [summary, setSummary] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [mindmap, setMindmap] = useState('');
-  const [isLoading, setIsLoading] = useState< 'summary' | 'tags' | 'mindmap' | null>(null);
-
-  const fetchSummary = async () => {
-    setIsLoading('summary');
-    setSummary('');
-    try {
-      const summaryText = await summarize(markdownText);
-      setSummary(summaryText);
-    } catch (error) {
-      console.error('Error fetching summary:', error);
-    } finally {
-      setIsLoading(null);
-    }
-  };
-  
-  const fetchTags = async () => {
-    setIsLoading('tags');
-    setTags([]);
-    try {
-      const tagsText = await llm('tags', markdownText);
-      setTags(tagsText.split(',').map(tag => tag.trim()));
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-    } finally {
-      setIsLoading(null);
-    }
-  };
-
-  const fetchMindmap = async () => {
-    setIsLoading('mindmap');
-    setMindmap('');
-    try {
-      const mindmapText = await llm('mindmap', markdownText);
-      setMindmap(mindmapText);
-    } catch (error) {
-      console.error('Error fetching mindmap:', error);
-    } finally {
-      setIsLoading(null);
-    }
-  };
-
+  const { markdownText, summary, tags } = useEditorStore();
 
   return (
     <div className="h-full overflow-auto" ref={ref} onScroll={onPreviewScroll}>
         <div className="p-6">
-            <div className="flex items-center justify-end gap-2 mb-4">
-                <Button onClick={fetchSummary} disabled={!!isLoading}>
-                    {isLoading === 'summary' ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Sparkles className="mr-2 h-4 w-4" />
-                    )}
-                    Summarize
-                </Button>
-                <Button onClick={fetchTags} disabled={!!isLoading}>
-                    {isLoading === 'tags' ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Tags className="mr-2 h-4 w-4" />
-                    )}
-                    Tags
-                </Button>
-                <Button onClick={fetchMindmap} disabled={!!isLoading}>
-                    {isLoading === 'mindmap' ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <BrainCircuit className="mr-2 h-4 w-4" />
-                    )}
-                    Mind Map
-                </Button>
-            </div>
-            
             {summary && (
                 <Card className="mb-6">
                 <CardHeader>
@@ -142,20 +69,6 @@ export const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({ onP
                         {tags.map((tag, index) => (
                         <Badge key={index} variant="secondary">{tag}</Badge>
                         ))}
-                    </CardContent>
-                </Card>
-            )}
-            
-            {mindmap && (
-                <Card className="mb-6">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                        <BrainCircuit className="h-5 w-5" />
-                        Mind Map
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Mermaid chart={mindmap} />
                     </CardContent>
                 </Card>
             )}

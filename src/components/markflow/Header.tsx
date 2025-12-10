@@ -7,6 +7,10 @@ import {
   Save,
   SaveAll,
   Settings,
+  Sparkles,
+  Tags,
+  BrainCircuit,
+  Loader2,
 } from "lucide-react";
 import { useEditorStore } from "@/store/editorStore";
 import { Button } from "@/components/ui/button";
@@ -22,6 +26,8 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import Link from 'next/link';
+import { summarize, llm } from "@/ai/llm";
+import { MindMapModal } from "./MindMapModal";
 
 export function Header() {
   const isTauri = useIsTauri();
@@ -33,8 +39,14 @@ export function Header() {
     setFilePath,
     isSaved,
     setSaved,
+    setSummary,
+    setTags,
+    setMindmap,
+    isLoading,
+    setIsLoading,
   } = useEditorStore();
   const [tauriApi, setTauriApi] = useState<any>(null);
+  const [isMindMapOpen, setMindMapOpen] = useState(false);
 
   useEffect(() => {
     if (isTauri) {
@@ -122,6 +134,66 @@ export function Header() {
     }
   };
 
+  const fetchSummary = async () => {
+    setIsLoading('summary');
+    setSummary('');
+    try {
+      const summaryText = await summarize(markdownText);
+      setSummary(summaryText);
+      toast({
+        title: "Summary Generated",
+        description: "The summary has been added to the preview.",
+      });
+    } catch (error) {
+      console.error('Error fetching summary:', error);
+      toast({
+        title: "Error Generating Summary",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+  
+  const fetchTags = async () => {
+    setIsLoading('tags');
+    setTags([]);
+    try {
+      const tagsText = await llm('tags', markdownText);
+      setTags(tagsText.split(',').map(tag => tag.trim()));
+      toast({
+        title: "Tags Generated",
+        description: "Tags have been added to the preview.",
+      });
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+      toast({
+        title: "Error Generating Tags",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const fetchMindmap = async () => {
+    setIsLoading('mindmap');
+    setMindmap('');
+    try {
+      const mindmapText = await llm('mindmap', markdownText);
+      setMindmap(mindmapText);
+      setMindMapOpen(true);
+    } catch (error) {
+      console.error('Error fetching mindmap:', error);
+      toast({
+        title: "Error Generating Mind Map",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
   const fileActions = [
     {
       label: "New File",
@@ -149,12 +221,36 @@ export function Header() {
     },
   ];
 
+  const aiActions = [
+    {
+      label: "Summarize",
+      icon: isLoading === 'summary' ? Loader2 : Sparkles,
+      action: fetchSummary,
+      loading: isLoading === 'summary',
+    },
+    {
+      label: "Generate Tags",
+      icon: isLoading === 'tags' ? Loader2 : Tags,
+      action: fetchTags,
+      loading: isLoading === 'tags',
+    },
+    {
+      label: "Generate Mind Map",
+      icon: isLoading === 'mindmap' ? Loader2 : BrainCircuit,
+      action: fetchMindmap,
+      loading: isLoading === 'mindmap',
+    }
+  ]
+
   return (
+    <>
     <div className="flex h-full flex-col gap-4 p-2">
       <div className="p-2">
         <AppLogo />
       </div>
+
       <div className="flex flex-col gap-2 px-2">
+        <p className="px-2 text-xs font-semibold text-muted-foreground">File Actions</p>
         <TooltipProvider>
           {fileActions.map(({ label, icon: Icon, action, shortcut }) => (
             <Tooltip key={label}>
@@ -186,11 +282,44 @@ export function Header() {
         </TooltipProvider>
 
         {!isTauri && (
-          <div className="mt-4 rounded-md border border-dashed border-destructive/50 bg-destructive/10 p-3 text-center text-xs text-destructive-foreground/80 group-data-[collapsible=icon]:hidden">
+          <div className="mt-2 rounded-md border border-dashed border-destructive/50 bg-destructive/10 p-3 text-center text-xs text-destructive-foreground/80 group-data-[collapsible=icon]:hidden">
             File operations are disabled in the browser. Please run in Tauri for
             full functionality.
           </div>
         )}
+      </div>
+
+      <div className="flex flex-col gap-2 px-2">
+        <p className="px-2 text-xs font-semibold text-muted-foreground">AI Actions</p>
+        <TooltipProvider>
+          {aiActions.map(({ label, icon: Icon, action, loading }) => (
+            <Tooltip key={label}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2 px-2"
+                  onClick={action}
+                  disabled={!!isLoading}
+                  aria-label={label}
+                >
+                  <Icon className={cn("h-4 w-4", loading && "animate-spin")} />
+                  <span className="truncate group-data-[collapsible=icon]:hidden">
+                    {label}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="right"
+                align="center"
+                className="group-data-[collapsible=icon]:flex hidden"
+              >
+                <p>
+                  {label}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </TooltipProvider>
       </div>
 
       <div className="mt-auto flex flex-col gap-2 p-2">
@@ -241,5 +370,7 @@ export function Header() {
         </div>
       </div>
     </div>
+    <MindMapModal open={isMindMapOpen} onOpenChange={setMindMapOpen} />
+    </>
   );
 }
