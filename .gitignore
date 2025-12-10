@@ -44,3 +44,6 @@ next-env.d.ts
 firebase-debug.log
 firestore-debug.log
 src-tauri/log.txt
+docs/sample2.md
+docs/sample1.md
+.vscode/tasks.json
