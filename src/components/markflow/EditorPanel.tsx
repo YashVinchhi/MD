@@ -1,7 +1,7 @@
 "use client";
 
 import { useEditorStore } from "@/store/editorStore";
-import CodeMirror, { type EditorView } from "@uiw/react-codemirror";
+import CodeMirror from "@uiw/react-codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { oneDark } from "@codemirror/theme-one-dark";
