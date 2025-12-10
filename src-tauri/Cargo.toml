@@ -1,4 +1,3 @@
-
 [package]
 name = "markflow"
 version = "0.1.0"
@@ -26,3 +25,7 @@ default = [ "custom-protocol" ]
 # this feature is used used for production builds where `devPath` points to the filesystem
 # DO NOT remove this
 custom-protocol = [ "tauri/custom-protocol" ]
+
+[[bin]]
+name = "markflow"
+path = "src/main.rs"
