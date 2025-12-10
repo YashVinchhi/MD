@@ -1,0 +1,203 @@
+"use client";
+
+import {
+  File,
+  FilePlus,
+  FolderOpen,
+  Save,
+  SaveAll,
+} from "lucide-react";
+import { useEditorStore } from "@/store/editorStore";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useIsTauri } from "@/hooks/useIsTauri";
+import { dialog, fs } from "@tauri-apps/api";
+import { AppLogo } from "./AppLogo";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+export function Header() {
+  const isTauri = useIsTauri();
+  const { toast } = useToast();
+  const {
+    markdownText,
+    setMarkdownText,
+    filePath,
+    setFilePath,
+    isSaved,
+    setSaved,
+  } = useEditorStore();
+
+  const handleNewFile = () => {
+    setMarkdownText("");
+    setFilePath(null);
+    setSaved(true);
+  };
+
+  const handleOpenFile = async () => {
+    try {
+      const selected = await dialog.open({
+        multiple: false,
+        filters: [{ name: "Markdown", extensions: ["md", "mdx"] }],
+      });
+      if (typeof selected === "string") {
+        const text = await fs.readTextFile(selected);
+        setMarkdownText(text);
+        setFilePath(selected);
+        setSaved(true);
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error opening file",
+        description: "Could not read the selected file.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveFile = async () => {
+    if (!filePath) {
+      await handleSaveFileAs();
+      return;
+    }
+    try {
+      await fs.writeTextFile(filePath, markdownText);
+      setSaved(true);
+      toast({
+        title: "File Saved",
+        description: `Saved to ${filePath.split(/[\\/]/).pop()}`,
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error saving file",
+        description: "Could not save the file.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveFileAs = async () => {
+    try {
+      const newPath = await dialog.save({
+        filters: [{ name: "Markdown", extensions: ["md", "mdx"] }],
+        defaultPath: filePath || undefined,
+      });
+      if (newPath) {
+        await fs.writeTextFile(newPath, markdownText);
+        setFilePath(newPath);
+        setSaved(true);
+        toast({
+          title: "File Saved",
+          description: `Saved to ${newPath.split(/[\\/]/).pop()}`,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error saving file",
+        description: "Could not save the file.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fileActions = [
+    {
+      label: "New File",
+      icon: FilePlus,
+      action: handleNewFile,
+      shortcut: "Ctrl+N",
+    },
+    {
+      label: "Open File",
+      icon: FolderOpen,
+      action: handleOpenFile,
+      shortcut: "Ctrl+O",
+    },
+    {
+      label: "Save",
+      icon: Save,
+      action: handleSaveFile,
+      shortcut: "Ctrl+S",
+    },
+    {
+      label: "Save As...",
+      icon: SaveAll,
+      action: handleSaveFileAs,
+      shortcut: "Ctrl+Shift+S",
+    },
+  ];
+
+  return (
+    <div className="flex h-full flex-col gap-4 p-2">
+      <div className="p-2">
+        <AppLogo />
+      </div>
+      <div className="flex flex-col gap-2 px-2">
+        <TooltipProvider>
+          {fileActions.map(({ label, icon: Icon, action, shortcut }) => (
+            <Tooltip key={label}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2 px-2"
+                  onClick={action}
+                  disabled={!isTauri}
+                  aria-label={label}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="truncate group-data-[collapsible=icon]:hidden">
+                    {label}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="right"
+                align="center"
+                className="group-data-[collapsible=icon]:flex hidden"
+              >
+                <p>
+                  {label} ({shortcut})
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </TooltipProvider>
+
+        {!isTauri && (
+          <div className="mt-4 rounded-md border border-dashed border-destructive/50 bg-destructive/10 p-3 text-center text-xs text-destructive-foreground/80 group-data-[collapsible=icon]:hidden">
+            File operations are disabled in the browser. Please run in Tauri for
+            full functionality.
+          </div>
+        )}
+      </div>
+
+      <div className="mt-auto flex flex-col gap-2 p-2">
+        <div className="flex items-center gap-2 rounded-md p-2 text-xs text-muted-foreground">
+          <File className="h-4 w-4 flex-shrink-0" />
+          <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
+            <span
+              className={cn(
+                "truncate transition-colors",
+                !isSaved && "text-accent-foreground"
+              )}
+            >
+              {filePath ? filePath.split(/[\\/]/).pop() : "Untitled"}{" "}
+              {!isSaved && "*"}
+            </span>
+            <span className="truncate text-xs opacity-70">
+              {filePath ? filePath : "No file open"}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
