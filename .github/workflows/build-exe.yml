@@ -57,8 +57,12 @@ jobs:
       - name: Install pkg globally
         run: npm install -g pkg
 
+
       - name: Package Node.js server
-        run: npm run pkg
+        run: |
+          npm run pkg
+          mkdir -p src-tauri/bin
+          mv server.exe src-tauri/bin/server.exe-x86_64-pc-windows-msvc.exe
 
       - name: Build Tauri EXE
         run: npm run tauri build
