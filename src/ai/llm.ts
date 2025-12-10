@@ -1,48 +1,6 @@
 'use server';
 
-import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/google-genai';
-import { ollama } from 'genkitx-ollama';
-
-// Configure Genkit once
-const llmProvider = typeof window !== 'undefined' ? localStorage.getItem('llmProvider') : 'gemini';
-const apiKey = typeof window !== 'undefined' ? localStorage.getItem('apiKey') : process.env.GEMINI_API_KEY;
-
-let model: string;
-
-const plugins: any[] = [];
-switch (llmProvider) {
-    case 'ollama':
-        plugins.push(ollama({
-            models: [{ name: 'gemma' }],
-            serverAddress: 'http://127.0.0.1:11434',
-        }));
-        model = 'ollama/gemma';
-        break;
-    case 'qwen':
-        plugins.push(ollama({
-            models: [{ name: 'qwen2:0.5b' }],
-            serverAddress: 'http://127.0.0.1:11434',
-        }));
-        model = 'ollama/qwen2:0.5b';
-        break;
-    case 'gemini':
-    default:
-        if (apiKey) {
-            plugins.push(googleAI({ apiKey }));
-        } else {
-            plugins.push(googleAI());
-        }
-        model = 'google/gemini-1.5-flash-latest';
-        break;
-}
-
-export const ai = genkit({
-    plugins,
-    logLevel: 'debug',
-    enableTracingAndMetrics: true,
-});
-
+import { ai } from './genkit';
 
 type LlmTask = 'summarize' | 'predict' | 'tags' | 'mindmap';
 
@@ -64,8 +22,24 @@ const prompts: Record<LlmTask, (content: string) => string> = {
     ${content}`,
 };
 
+function getModel() {
+  let llmProvider: string | null = null;
+  if (typeof window !== 'undefined') {
+    llmProvider = localStorage.getItem('llmProvider');
+  }
+
+  if (llmProvider === 'ollama') {
+    return 'ollama/gemma';
+  }
+  if (llmProvider === 'qwen') {
+    return 'ollama/qwen2:0.5b';
+  }
+  return 'google/gemini-1.5-flash';
+}
+
 export async function llm(task: LlmTask, content: string): Promise<string> {
   const prompt = prompts[task](content);
+  const model = getModel();
 
   const { text } = await ai.generate({
     model,
