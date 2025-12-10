@@ -1,0 +1,7 @@
+/src/
+/target/
+/Cargo.lock
+/build/
+/icons/
+dist/
+node_modules/
