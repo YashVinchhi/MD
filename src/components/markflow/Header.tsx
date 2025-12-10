@@ -20,6 +20,7 @@ import { AppLogo } from "./AppLogo";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { Link, BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 export function Header() {
   const isTauri = useIsTauri();

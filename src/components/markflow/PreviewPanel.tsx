@@ -4,7 +4,7 @@ import { useEditorStore } from "@/store/editorStore";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
@@ -27,8 +27,32 @@ const rehypeSanitizeOptions = {
   },
 };
 
+interface ExtraProps extends React.HTMLAttributes<HTMLElement> {
+  node?: any;
+  className?: string;
+  children?: React.ReactNode;
+  inline?: boolean;
+}
+
 export const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({ onPreviewScroll }, ref) => {
   const { markdownText } = useEditorStore();
+  const [summary, setSummary] = useState('');
+
+  const fetchSummary = async () => {
+    try {
+      const response = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: markdownText }),
+      });
+      const data = await response.json();
+      setSummary(data.summary);
+    } catch (error) {
+      console.error('Error fetching summary:', error);
+    }
+  };
 
   return (
     <div className="h-full overflow-auto" ref={ref} onScroll={onPreviewScroll}>
@@ -41,7 +65,7 @@ export const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({ onP
             [rehypeSanitize, rehypeSanitizeOptions],
           ]}
           components={{
-            code({ node, inline, className, children, ...props }) {
+            code({ node, inline, className, children, ...props }: ExtraProps) {
               const match = /language-(\w+)/.exec(className || "");
               if (match && match[1] === "mermaid") {
                 return (
@@ -63,6 +87,13 @@ export const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({ onP
           {markdownText}
         </ReactMarkdown>
       </article>
+      <button onClick={fetchSummary}>Summarize</button>
+      {summary && (
+        <div className="summary-box">
+          <h3>Summary</h3>
+          <p>{summary}</p>
+        </div>
+      )}
     </div>
   );
 });

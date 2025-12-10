@@ -51,4 +51,8 @@ const ResizableHandle = React.forwardRef<
 ))
 ResizableHandle.displayName = "ResizableHandle"
 
-export { ResizablePanelGroup, ResizablePanel, ResizableHandle }
+const ResizableComponent = React.forwardRef<HTMLDivElement, Props>((props, ref) => (
+  <div ref={ref} {...props} />
+))
+
+export { ResizablePanelGroup, ResizablePanel, ResizableHandle, ResizableComponent }
