@@ -16,10 +16,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useIsTauri } from "@/hooks/useIsTauri";
-import { dialog, fs } from "@tauri-apps/api";
 import { AppLogo } from "./AppLogo";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 export function Header() {
   const isTauri = useIsTauri();
@@ -32,6 +32,15 @@ export function Header() {
     isSaved,
     setSaved,
   } = useEditorStore();
+  const [tauriApi, setTauriApi] = useState<any>(null);
+
+  useEffect(() => {
+    if (isTauri) {
+      import("@tauri-apps/api").then((api) => {
+        setTauriApi(api);
+      });
+    }
+  }, [isTauri]);
 
   const handleNewFile = () => {
     setMarkdownText("");
@@ -40,13 +49,14 @@ export function Header() {
   };
 
   const handleOpenFile = async () => {
+    if (!tauriApi) return;
     try {
-      const selected = await dialog.open({
+      const selected = await tauriApi.dialog.open({
         multiple: false,
         filters: [{ name: "Markdown", extensions: ["md", "mdx"] }],
       });
       if (typeof selected === "string") {
-        const text = await fs.readTextFile(selected);
+        const text = await tauriApi.fs.readTextFile(selected);
         setMarkdownText(text);
         setFilePath(selected);
         setSaved(true);
@@ -62,12 +72,13 @@ export function Header() {
   };
 
   const handleSaveFile = async () => {
+    if (!tauriApi) return;
     if (!filePath) {
       await handleSaveFileAs();
       return;
     }
     try {
-      await fs.writeTextFile(filePath, markdownText);
+      await tauriApi.fs.writeTextFile(filePath, markdownText);
       setSaved(true);
       toast({
         title: "File Saved",
@@ -84,13 +95,14 @@ export function Header() {
   };
 
   const handleSaveFileAs = async () => {
+    if (!tauriApi) return;
     try {
-      const newPath = await dialog.save({
+      const newPath = await tauriApi.dialog.save({
         filters: [{ name: "Markdown", extensions: ["md", "mdx"] }],
         defaultPath: filePath || undefined,
       });
       if (newPath) {
-        await fs.writeTextFile(newPath, markdownText);
+        await tauriApi.fs.writeTextFile(newPath, markdownText);
         setFilePath(newPath);
         setSaved(true);
         toast({

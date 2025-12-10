@@ -14,10 +14,10 @@ import {
   SidebarProvider,
 } from "../ui/sidebar";
 import { Header } from "./Header";
-import { useEffect, useRef } from "react";
-import { event, fs } from "@tauri-apps/api";
+import { useEffect, useRef, useState } from "react";
 import { useEditorStore } from "@/store/editorStore";
 import { useToast } from "@/hooks/use-toast";
+import { useIsTauri } from "@/hooks/useIsTauri";
 
 export default function MarkFlowClient() {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -26,15 +26,26 @@ export default function MarkFlowClient() {
   const isPreviewScrolling = useRef(false);
   const { setMarkdownText, setFilePath, setSaved } = useEditorStore();
   const { toast } = useToast();
+  const isTauri = useIsTauri();
+  const [tauriApi, setTauriApi] = useState<any>(null);
 
   useEffect(() => {
-    const unlisten = event.listen<string[]>(
+    if (isTauri) {
+      import("@tauri-apps/api").then((api) => {
+        setTauriApi(api);
+      });
+    }
+  }, [isTauri]);
+
+  useEffect(() => {
+    if (!tauriApi) return;
+    const unlisten = tauriApi.event.listen<string[]>(
       "tauri://file-drop",
-      async (e) => {
+      async (e: { payload: string[] }) => {
         const filePath = e.payload[0];
         if (filePath && (filePath.endsWith(".md") || filePath.endsWith(".mdx"))) {
           try {
-            const text = await fs.readTextFile(filePath);
+            const text = await tauriApi.fs.readTextFile(filePath);
             setMarkdownText(text);
             setFilePath(filePath);
             setSaved(true);
@@ -54,9 +65,9 @@ export default function MarkFlowClient() {
       }
     );
     return () => {
-      unlisten.then((f) => f());
+      unlisten.then((f: () => void) => f());
     };
-  }, [setMarkdownText, setFilePath, setSaved, toast]);
+  }, [tauriApi, setMarkdownText, setFilePath, setSaved, toast]);
 
   const handleEditorScroll = () => {
     if (!editorRef.current || !previewRef.current || isPreviewScrolling.current) return;
