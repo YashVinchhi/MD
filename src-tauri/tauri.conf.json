@@ -22,7 +22,10 @@
         "all": true,
         "readFile": true,
         "writeFile": true,
-        "scope": ["$APPDATA/*", "$APPDATA/**"]
+        "scope": [
+          "$APPDATA/*",
+          "$APPDATA/**"
+        ]
       },
       "shell": {
         "all": false,
@@ -47,7 +50,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "com.markflow.dev",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
